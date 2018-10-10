@@ -16,19 +16,6 @@ void lightUp (int col, int rows[])
     display_pixel_set (col, rows[2], 1);
 }
 
-void flashLed (void)
-{
-    uint8_t state = 0;
-    led_init ();
-
-    while (1)
-    {
-        pacer_wait ();
-        led_set (LED1, state);
-        state = !state;
-    }
-}
-
 
 void moveLeft (int col, int rows[])
 {
@@ -78,6 +65,7 @@ int main (void)
     display_init ();
     navswitch_init ();
     pacer_init (PACER_RATE);
+
     tinygl_init (PACER_RATE);
     tinygl_setUp ();
     tinygl_text ("Pong\0");
@@ -97,6 +85,7 @@ int main (void)
         if (navswitch_push_event_p (NAVSWITCH_PUSH)) {
             tinygl_clear ();
         }
+
 
         if (navswitch_push_event_p (NAVSWITCH_NORTH))
             moveRight (col, rows);
