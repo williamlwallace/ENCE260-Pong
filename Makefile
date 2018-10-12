@@ -28,6 +28,9 @@ led.o: ../../drivers/led.c ../../drivers/avr/pio.h ../../drivers/avr/system.h ..
 pio.o: ../../drivers/avr/pio.c ../../drivers/avr/pio.h ../../drivers/avr/system.h
 	$(CC) -c $(CFLAGS) $< -o $@
 
+bar.o: bar.c bar.h
+	$(CC) -c $(CFLAGS) $< -o $@
+
 timer.o: ../../drivers/avr/timer.c ../../drivers/avr/system.h ../../drivers/avr/timer.h
 	$(CC) -c $(CFLAGS) $< -o $@
 
@@ -51,7 +54,7 @@ tinygl.o: ../../utils/tinygl.c ../../drivers/avr/system.h ../../drivers/display.
 
 
 # Link: create ELF output file from object files.
-game.out: game.o system.o led.o pio.o timer.o display.o ledmat.o navswitch.o font.o pacer.o tinygl.o
+game.out: game.o system.o led.o pio.o bar.o timer.o display.o ledmat.o navswitch.o font.o pacer.o tinygl.o
 	$(CC) $(CFLAGS) $^ -o $@ -lm
 	$(SIZE) $@
 
