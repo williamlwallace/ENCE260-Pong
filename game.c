@@ -160,7 +160,7 @@ void ball_task (void)
         }
     }
 
-    if (col < 0) // just bounces off the top for now, should be received on the other AVR as (row, 0)?
+    if (col < 0) // just bounces off the top for now, should be received on the other AVR as (row+-1, 0)? If rowinc is negative then row-1, if rowinc is positive then row+1 for continuity?
     {
         col -= colinc * 2;
         colinc = -colinc;
