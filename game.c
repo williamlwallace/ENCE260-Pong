@@ -165,7 +165,8 @@ int row = 0;
 int col = 0;
 int rowinc = 0;
 int colinc = 0;
-int ball_tick = 0;
+char sendRow = 0;
+uint8_t ball_tick = 0;
 
 
 /** Ball movement code from Michael Hayes' bounce2.c */
@@ -198,13 +199,18 @@ void ball_task (void) // return state from here
         }
     }
 
-    if (col < 0) // just bounces off the top for now
-    {
-        col -= colinc * 2;
-        colinc = -colinc;
-        // sendMessage (ROW); ROW should be 'A' for 0, 'B' for 1, 'C' for 2, 'D' for 3, 'E' for 4, 'F' for 5, 'G' for 6
-        // display_pixel_set (col, row, 0);
 
+    if (col == 0)
+    {
+        //col -= colinc * 2;
+        //colinc = -colinc;
+
+        //rowinc = -rowinc;
+        sendRow = row;
+
+        sendMessage ('B');
+        sendMessage (sendRow);
+        sendMessage (-rowinc);
     }
 
     // draw new position
@@ -218,9 +224,10 @@ int main (void)
 
     int rows[3] = {3, 4, 5}; // initial LED positions of bar
 
-    row = 3;
-    col = 2;
+    row = 4;
+    col = 1;
     rowinc = 1;
+
     colinc = 1;
     ball_tick = 0; // initial values for ball_task ()
 
@@ -236,10 +243,15 @@ int main (void)
     {
         pacer_wait ();
 
-        // if (getMessage () == ROW)
+        if (getMessage () == 'B') {
+            row = getMessage ();
+            rowinc = getMessage ();
+            col = 0;
+            colinc = -1;
+        }
 
         ball_tick++;
-        if (ball_tick >= 100) // ball moves at 5 Hz (every 100 loops)
+        if (ball_tick >= 150) // ball moves at 5 Hz (every 100 loops)
         {
             display_pixel_set (col, row, 1); // initialise ball position
             ball_task ();
