@@ -46,3 +46,18 @@ void bar_moveRight (int col, int rows[])
         }
     }
 }
+
+
+void bar_task (int rows[])
+{
+    if (navswitch_push_event_p (NAVSWITCH_NORTH)) {
+        bar_moveRight (COL, rows);
+        bar_lightUp (COL, rows);
+    }
+
+    if (navswitch_push_event_p (NAVSWITCH_SOUTH)) {
+        bar_moveLeft (COL, rows);
+        bar_lightUp (COL, rows);
+    }
+}
+

@@ -12,10 +12,14 @@
 #include "navswitch.h"
 #include "display.h"
 
+#define COL 4
+
 void bar_lightUp (int col, int rows[]);
 
 void bar_moveLeft (int col, int rows[]);
 
 void bar_moveRight (int col, int rows[]);
+
+void bar_task (int rows[]);
 
 #endif

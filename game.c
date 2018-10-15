@@ -1,3 +1,10 @@
+/** ENCE260 Assignment 2018
+ * Game: Pong
+ * Group number: 426
+ * Student              ID
+ * Alina Phang          35207642
+ * William Wallace      */
+
 #include "system.h"
 #include "pacer.h"
 #include "led.h"
@@ -10,16 +17,7 @@
 
 #define PACER_RATE 500
 #define MESSAGE_RATE 10
-#define COL 4
-
-void tinygl_setUp (void) // initialises the font, speed and mode
-{
-    tinygl_font_set (&font5x5_1);
-    tinygl_text_speed_set (MESSAGE_RATE);
-    tinygl_text_mode_set (TINYGL_TEXT_MODE_SCROLL);
-    tinygl_text_dir_set (TINYGL_TEXT_DIR_ROTATE);
-}
-
+#define LOST 'L'
 
 void initialiseAll (void)
 {
@@ -32,6 +30,15 @@ void initialiseAll (void)
 }
 
 
+void tinygl_setUp (void) // initialises the font, speed and mode
+{
+    tinygl_font_set (&font5x5_1);
+    tinygl_text_speed_set (MESSAGE_RATE);
+    tinygl_text_mode_set (TINYGL_TEXT_MODE_SCROLL);
+    tinygl_text_dir_set (TINYGL_TEXT_DIR_ROTATE);
+}
+
+
 uint8_t led_task (uint8_t state) // toggles LED
 {
     led_set  (LED1, state);
@@ -40,10 +47,10 @@ uint8_t led_task (uint8_t state) // toggles LED
 }
 
 
-void startScreen (void)
+void startScreen (void) // return state from here
 {
     tinygl_setUp ();
-    tinygl_text ("PONG\0");
+    tinygl_text ("PONG:PUSH WHEN READY\0");
     led_init ();
     uint8_t state = 0;
     uint8_t led_tick = 0;
@@ -100,28 +107,56 @@ void winnerScreen (void)
 }
 
 
-void bar_task (int rows[]) // put into bar.c
+void display_character (char character)
 {
-    if (navswitch_push_event_p (NAVSWITCH_NORTH))
-        bar_moveRight (COL, rows);
-        bar_lightUp (COL, rows);
-
-    if (navswitch_push_event_p (NAVSWITCH_SOUTH))
-        bar_moveLeft (COL, rows);
-        bar_lightUp (COL, rows);
+    char buffer[2];
+    buffer[0] = character;
+    buffer[1] = '\0';
+    tinygl_text (buffer);
 }
 
 
-typedef struct player_s { // ???????
-    char player; // A or B?
-    int col; // position of ball that needs to be transmitted
-    int row;
-} Player;
-
-
-void choosePlayer (void)
+void countdown (void)
 {
-    // navswitch to decide player A and player B?
+    tinygl_font_set (&font5x5_1);
+    tinygl_text_speed_set (MESSAGE_RATE);
+    tinygl_text_dir_set (TINYGL_TEXT_DIR_ROTATE);
+    int count_tick = 0;
+
+    while (count_tick < 1500)
+    {
+        pacer_wait();
+
+        count_tick++;
+
+        display_character ('3'); // start count immediately
+
+        if (count_tick >= 500) { // after another second
+            display_character ('2');
+        }
+
+        if (count_tick >= 1000) { // after another second
+            display_character ('1');
+        }
+
+        tinygl_update ();
+    }
+}
+
+
+char getMessage (void)
+{
+    if (ir_uart_read_ready_p ()) {
+        return ir_uart_getc ();
+    } else {
+        return 0;
+    }
+}
+
+
+void sendMessage (char message)
+{
+    ir_uart_putc (message);
 }
 
 
@@ -133,7 +168,9 @@ int colinc = 0;
 int ball_tick = 0;
 
 
-void ball_task (void)
+/** Ball movement code from Michael Hayes' bounce2.c */
+
+void ball_task (void) // return state from here
 {
     ball_tick = 0; // reset ticks
 
@@ -156,14 +193,18 @@ void ball_task (void)
 
         } else { // you missed
             display_clear ();
-            loserScreen (); // need to send message to other AVR that they've won
+            loserScreen ();
+            sendMessage (LOST); // send message to other player that they've won
         }
     }
 
-    if (col < 0) // just bounces off the top for now, should be received on the other AVR as (row+-1, 0)? If rowinc is negative then row-1, if rowinc is positive then row+1 for continuity?
+    if (col < 0) // just bounces off the top for now
     {
         col -= colinc * 2;
         colinc = -colinc;
+        // sendMessage (ROW); ROW should be 'A' for 0, 'B' for 1, 'C' for 2, 'D' for 3, 'E' for 4, 'F' for 5, 'G' for 6
+        // display_pixel_set (col, row, 0);
+
     }
 
     // draw new position
@@ -174,8 +215,8 @@ void ball_task (void)
 int main (void)
 {
     initialiseAll ();
-    startScreen ();
-    int rows[3] = {2, 3, 4}; // initial LED positions of bar
+
+    int rows[3] = {3, 4, 5}; // initial LED positions of bar
 
     row = 3;
     col = 2;
@@ -183,15 +224,22 @@ int main (void)
     colinc = 1;
     ball_tick = 0; // initial values for ball_task ()
 
+    startScreen ();
     tinygl_clear (); // clear the starting screen
+
+    countdown (); // count down from 3 so the game doesn't start immediately
+    tinygl_clear ();
+
     bar_lightUp (COL, rows); // initialise the bar
 
-    while(1)
+    while (1)
     {
         pacer_wait ();
 
+        // if (getMessage () == ROW)
+
         ball_tick++;
-        if (ball_tick >= 120) // ball moves at 4 Hz (every 120 loops)
+        if (ball_tick >= 100) // ball moves at 5 Hz (every 100 loops)
         {
             display_pixel_set (col, row, 1); // initialise ball position
             ball_task ();
@@ -201,6 +249,12 @@ int main (void)
 
         display_update ();
         navswitch_update ();
+
+        if (getMessage () == LOST) { // other player lost
+            display_clear ();
+            winnerScreen ();
+        }
+
     }
     return 0;
 }
