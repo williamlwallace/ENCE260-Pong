@@ -230,8 +230,8 @@ void ball_task (void)
     if (col < 0) // if past top of screen
     {
         playing = 0;
-        row = inverseRow[row]; // the row as a char, according to where it should be received at on the other side
         sendMessage (BALL); // let the other player know it has to receive a ball
+        row = inverseRow[row]; // the row as a char, according to where it should be received at on the other side
         //sendMessage (sendRow);
     }
 
@@ -249,7 +249,7 @@ int main (void)
     row = 3;
     col = 2;
     rowinc = 1;
-    colinc = 1;
+    colinc = -1;
     ball_tick = 0; // initial values for ball_task ()
 
     startScreen ();
@@ -267,7 +267,7 @@ int main (void)
         if (playing == 1) { // at first this is only the player that pushed down
             ball_tick++;
 
-            if (ball_tick >= 150) { // ball moves at 5 Hz (every 100 loops)
+            if (ball_tick >= 100) { // ball moves at 5 Hz (every 100 loops)
                 display_pixel_set (col, row, 1); // initialise ball position
                 ball_task ();
             }
@@ -283,7 +283,7 @@ int main (void)
 
             if (message == BALL) {
                 playing = 1; // now other player joins
-                col = 0;
+                col = -1;
                 rowinc = -rowinc;
                 colinc = -colinc;
             }
