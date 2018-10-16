@@ -1,5 +1,5 @@
 /** @file   bar.h
-    @author Alina Phang
+    @authors Alina Phang, William Wallace
     @date   11 October 2018
     @brief  Pong bar module
 
