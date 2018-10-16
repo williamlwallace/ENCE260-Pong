@@ -1,9 +1,9 @@
 /** ENCE260 Assignment 2018
  * Game: Pong
  * Group number: 426
- * Student              ID
- * Alina Phang          35207642
- * William Wallace      11389447*/
+ * Student              Usercode
+ * Alina Phang          aph78
+ * William Wallace      wwa52*/
 
 #include "stdio.h"
 #include "system.h"
