@@ -18,7 +18,11 @@
 #define PACER_RATE 500
 #define MESSAGE_RATE 10
 #define LOST 'L'
+#define BALL 'B'
 
+int playing = 0; // global playing variable, 0 if player not active
+
+/** Initialises all of the drivers we will use */
 void initialiseAll (void)
 {
     system_init ();
@@ -30,7 +34,8 @@ void initialiseAll (void)
 }
 
 
-void tinygl_setUp (void) // initialises the font, speed and mode
+/** Initialises the font, speed and mode of text */
+void tinygl_setUp (void)
 {
     tinygl_font_set (&font5x5_1);
     tinygl_text_speed_set (MESSAGE_RATE);
@@ -39,7 +44,8 @@ void tinygl_setUp (void) // initialises the font, speed and mode
 }
 
 
-uint8_t led_task (uint8_t state) // toggles LED
+/** Toggles LED */
+uint8_t led_task (uint8_t state)
 {
     led_set  (LED1, state);
     state = !state;
@@ -47,21 +53,29 @@ uint8_t led_task (uint8_t state) // toggles LED
 }
 
 
-void startScreen (void) // return state from here
+/** Starting screen: Push to be the player with the ball first, NAVSWITCH_EAST otherwise */
+void startScreen (void)
 {
     tinygl_setUp ();
-    tinygl_text ("PONG:PUSH WHEN READY\0");
+    tinygl_text ("PONG:PUSH FOR BALL\0");
     led_init ();
     uint8_t state = 0;
     uint8_t led_tick = 0;
 
-    while (navswitch_up_p (NAVSWITCH_PUSH)) { // push navswitch to indicate that players are ready
+    while (1) {
         pacer_wait ();
 
         led_tick++;
         if (led_tick >= 42) { // flash LED at 12 Hz
             led_tick = 0;
             state = led_task (state);
+        }
+
+        if (navswitch_push_event_p (NAVSWITCH_PUSH)) { // player that pushes down gets the ball first
+            playing = 1; // variable indicating that this player is now active
+            break;
+        } else if (navswitch_push_event_p (NAVSWITCH_EAST)) { // other player
+            break;
         }
 
         tinygl_update ();
@@ -72,6 +86,7 @@ void startScreen (void) // return state from here
 }
 
 
+/** Screen shown if you lose */
 void loserScreen (void)
 {
     tinygl_setUp ();
@@ -85,6 +100,7 @@ void loserScreen (void)
 }
 
 
+/** Screen shown if you win */
 void winnerScreen (void)
 {
     tinygl_setUp ();
@@ -107,6 +123,7 @@ void winnerScreen (void)
 }
 
 
+/** Function for displaying a character, taken from lab3-ex3.c */
 void display_character (char character)
 {
     char buffer[2];
@@ -116,6 +133,7 @@ void display_character (char character)
 }
 
 
+/** Counts down from 3, half a second at a time */
 void countdown (void)
 {
     tinygl_font_set (&font5x5_1);
@@ -123,19 +141,19 @@ void countdown (void)
     tinygl_text_dir_set (TINYGL_TEXT_DIR_ROTATE);
     int count_tick = 0;
 
-    while (count_tick < 1500)
+    while (count_tick < 750) // after '1' has shown for a half second
     {
         pacer_wait();
 
         count_tick++;
 
-        display_character ('3'); // start count immediately
+        display_character ('3');
 
-        if (count_tick >= 500) { // after another second
+        if (count_tick >= 250) { // after half a second
             display_character ('2');
         }
 
-        if (count_tick >= 1000) { // after another second
+        if (count_tick >= 500) { // after another half second
             display_character ('1');
         }
 
@@ -144,6 +162,7 @@ void countdown (void)
 }
 
 
+/** Tries to receive a message from the other player */
 char getMessage (void)
 {
     if (ir_uart_read_ready_p ()) {
@@ -154,67 +173,62 @@ char getMessage (void)
 }
 
 
+/** Sends a message to the other player */
 void sendMessage (char message)
 {
     ir_uart_putc (message);
 }
 
 
-// ball variables global so that they can be modified between functions
+/** Global ball variables: global so that they can be modified between functions */
 int row = 0;
 int col = 0;
+
 int rowinc = 0;
-int colinc = 0;
-char sendRow = 0;
+int colinc = 0; // increments decide which direction ball moves in
+
+char sendRow = 0; // row converted to a char so it can be transmitted to the other player
+char inverseRow[7] = {6, 5, 4, 3, 2, 1, 0}; // where the row is on the other side
+
 uint8_t ball_tick = 0;
 
 
-/** Ball movement code from Michael Hayes' bounce2.c */
-
-void ball_task (void) // return state from here
+/** Moves ball in a certain direction, one LED at a time. Reference: ball movement code from Michael Hayes' bounce2.c */
+void ball_task (void)
 {
     ball_tick = 0; // reset ticks
-
     display_pixel_set (col, row, 0); // erase previous position
 
-    col += colinc; // moves diagonally
-    row += rowinc;
+    col += colinc;
+    row += rowinc; // always moves diagonally
 
-    if (row > 6 || row < 0) // bounce if ball hits wall
+    if (row > 6 || row < 0) // if ball hits wall, bounce
     {
         row -= rowinc * 2;
-        rowinc = -rowinc;
+        rowinc = -rowinc; // reverses direction for next time
     }
 
     if (col == 4) // if at bottom of screen
     {
         if (display_pixel_get (col, row)) { // if bar in the right place, bounce
             col -= colinc * 2;
-            colinc = -colinc;
+            colinc = -colinc; // reverses direction for next time? DO YOU STILL NEED THIS IF YOU'RE NOT BOUNCING OFF THE TOP? FIND OUT
 
         } else { // you missed
+            sendMessage (LOST); // send message to other player that they've won
             display_clear ();
             loserScreen ();
-            sendMessage (LOST); // send message to other player that they've won
         }
     }
 
-
-    if (col == 0)
+    if (col < 0) // if past top of screen
     {
-        //col -= colinc * 2;
-        //colinc = -colinc;
-
-        //rowinc = -rowinc;
-        sendRow = row;
-
-        sendMessage ('B');
+        sendRow = inverseRow[row]; // the row as a char, according to where it should be received at on the other side
+        sendMessage (BALL); // let the other player know it has to receive a ball
         sendMessage (sendRow);
-        sendMessage (-rowinc);
     }
 
-    // draw new position
-    display_pixel_set (col, row, 1);
+    display_pixel_set (col, row, 1); // draw new position
 }
 
 
@@ -224,10 +238,9 @@ int main (void)
 
     int rows[3] = {3, 4, 5}; // initial LED positions of bar
 
-    row = 4;
-    col = 1;
+    row = 3;
+    col = 2;
     rowinc = 1;
-
     colinc = 1;
     ball_tick = 0; // initial values for ball_task ()
 
@@ -243,18 +256,13 @@ int main (void)
     {
         pacer_wait ();
 
-        if (getMessage () == 'B') {
-            row = getMessage ();
-            rowinc = getMessage ();
-            col = 0;
-            colinc = -1;
-        }
+        if (playing == 1) { // at first this is only the player that pushed down
+            ball_tick++;
 
-        ball_tick++;
-        if (ball_tick >= 150) // ball moves at 5 Hz (every 100 loops)
-        {
-            display_pixel_set (col, row, 1); // initialise ball position
-            ball_task ();
+            if (ball_tick >= 100) { // ball moves at 5 Hz (every 100 loops)
+                display_pixel_set (col, row, 1); // initialise ball position
+                ball_task ();
+            }
         }
 
         bar_task (rows);
@@ -262,11 +270,18 @@ int main (void)
         display_update ();
         navswitch_update ();
 
-        if (getMessage () == LOST) { // other player lost
+        if (getMessage () == BALL) {
+            playing = 1; // now other player joins
+            row = getMessage ();
+            col = 0;
+            rowinc = -rowinc;
+            colinc = -colinc;
+        }
+
+        if (getMessage () == LOST) { // the other player lost
             display_clear ();
             winnerScreen ();
         }
-
     }
     return 0;
 }
