@@ -3,8 +3,9 @@
  * Group number: 426
  * Student              ID
  * Alina Phang          35207642
- * William Wallace      */
+ * William Wallace      11389447*/
 
+#include "stdio.h"
 #include "system.h"
 #include "pacer.h"
 #include "led.h"
@@ -21,6 +22,8 @@
 #define BALL 'B'
 
 int playing = 0; // global playing variable, 0 if player not active
+bool not_break = true; // makes sure the game does not break please
+
 
 /** Initialises all of the drivers we will use */
 void initialiseAll (void)
@@ -176,7 +179,10 @@ char getMessage (void)
 /** Sends a message to the other player */
 void sendMessage (char message)
 {
-    ir_uart_putc (message);
+    if (ir_uart_write_ready_p ()) {
+        ir_uart_putc (message);
+    }
+
 }
 
 
@@ -212,7 +218,7 @@ void ball_task (void)
     {
         if (display_pixel_get (col, row)) { // if bar in the right place, bounce
             col -= colinc * 2;
-            colinc = -colinc; // reverses direction for next time? DO YOU STILL NEED THIS IF YOU'RE NOT BOUNCING OFF THE TOP? FIND OUT
+            colinc = -colinc; // reverses direction for next time
 
         } else { // you missed
             sendMessage (LOST); // send message to other player that they've won
@@ -223,6 +229,7 @@ void ball_task (void)
 
     if (col < 0) // if past top of screen
     {
+        playing = 0;
         sendRow = inverseRow[row]; // the row as a char, according to where it should be received at on the other side
         sendMessage (BALL); // let the other player know it has to receive a ball
         sendMessage (sendRow);
@@ -237,9 +244,10 @@ int main (void)
     initialiseAll ();
 
     int rows[3] = {3, 4, 5}; // initial LED positions of bar
+    char message = 0;
 
     row = 3;
-    col = 2;
+    col = 0;
     rowinc = 1;
     colinc = 1;
     ball_tick = 0; // initial values for ball_task ()
@@ -270,18 +278,22 @@ int main (void)
         display_update ();
         navswitch_update ();
 
-        if (getMessage () == BALL) {
-            playing = 1; // now other player joins
-            row = getMessage ();
-            col = 0;
-            rowinc = -rowinc;
-            colinc = -colinc;
-        }
 
-        if (getMessage () == LOST) { // the other player lost
-            display_clear ();
-            winnerScreen ();
+        if (playing == 0) {
+            message = getMessage ();
+
+            if (message == BALL) {
+                playing = 1; // now other player joins
+                row = getMessage ();
+                col = 0;
+                rowinc = -rowinc;
+                //colinc = -colinc;
+            }
+
+            if (message == LOST) { // the other player lost
+                display_clear ();
+                winnerScreen ();
+            }
         }
     }
-    return 0;
 }
