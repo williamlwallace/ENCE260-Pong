@@ -5,7 +5,6 @@
  * Alina Phang          aph78
  * William Wallace      wwa52*/
 
-#include "stdio.h"
 #include "system.h"
 #include "pacer.h"
 #include "led.h"
@@ -20,6 +19,11 @@
 #define MESSAGE_RATE 10
 #define LOST 'L'
 #define BALL 'B'
+
+void playGame (void);
+void restartGame (void);
+
+int rows[3] = {2, 3, 4}; // initial LED positions of bar
 
 int playing = 0; // global playing variable, 0 if player not active
 bool not_break = true; // makes sure the game does not break please
@@ -98,6 +102,19 @@ void loserScreen (void)
     while (1) {
         pacer_wait ();
 
+        if (navswitch_push_event_p (NAVSWITCH_PUSH)) {
+            playing = 1;
+            restartGame ();
+            break;
+        }
+
+        if (navswitch_push_event_p (NAVSWITCH_EAST)) {
+            playing = 0;
+            restartGame ();
+            break;
+        }
+
+        navswitch_update ();
         tinygl_update ();
     }
 }
@@ -121,8 +138,30 @@ void winnerScreen (void)
             state = led_task (state);
         }
 
+        if (navswitch_push_event_p (NAVSWITCH_PUSH)) {
+            playing = 1;
+            restartGame ();
+            break;
+        }
+
+        if (navswitch_push_event_p (NAVSWITCH_EAST)) {
+            playing = 0;
+            restartGame ();
+            break;
+        }
+
+        navswitch_update ();
         tinygl_update ();
     }
+}
+
+
+void restartGame (void)
+{
+    rows[0] = 2;
+    rows[1] = 3;
+    rows[2] = 4; // resetting where the bar should be
+    playGame ();
 }
 
 
@@ -187,6 +226,8 @@ void sendMessage (char message)
 
 
 /** Global ball variables: global so that they can be modified between functions */
+char message = 0;
+
 int row = 0;
 int col = 0;
 
@@ -202,7 +243,9 @@ uint8_t ball_tick = 0;
 /** Moves ball in a certain direction, one LED at a time. Reference: ball movement code from Michael Hayes' bounce2.c */
 void ball_task (void)
 {
+    led_init ();
     ball_tick = 0; // reset ticks
+    led_set  (LED1, 0); // reset LED
     display_pixel_set (col, row, 0); // erase previous position
 
     col += colinc;
@@ -217,6 +260,7 @@ void ball_task (void)
     if (col == 4) // if at bottom of screen
     {
         if (display_pixel_get (col, row)) { // if bar in the right place, bounce
+            led_set (LED1, 1); // turn on LED
             col -= colinc * 2;
             colinc = -colinc; // reverses direction for next time
 
@@ -232,25 +276,18 @@ void ball_task (void)
         playing = 0;
         sendMessage (BALL); // let the other player know it has to receive a ball
         row = inverseRow[row]; // the row as a char, according to where it should be received at on the other side
-        //sendMessage (sendRow);
     }
 
     display_pixel_set (col, row, 1); // draw new position
 }
 
 
-int main (void)
+void playGame (void)
 {
-    initialiseAll ();
-
-    int rows[3] = {3, 4, 5}; // initial LED positions of bar
-    char message = 0;
-
     row = 3;
     col = 2;
     rowinc = 1;
-    colinc = -1;
-    ball_tick = 0; // initial values for ball_task ()
+    colinc = -1; // initially moves upwards
 
     startScreen ();
     tinygl_clear (); // clear the starting screen
@@ -267,7 +304,7 @@ int main (void)
         if (playing == 1) { // at first this is only the player that pushed down
             ball_tick++;
 
-            if (ball_tick >= 100) { // ball moves at 5 Hz (every 100 loops)
+            if (ball_tick >= 90) { // ball moves at 5.5 Hz (every 90 loops)
                 display_pixel_set (col, row, 1); // initialise ball position
                 ball_task ();
             }
@@ -285,7 +322,7 @@ int main (void)
                 playing = 1; // now other player joins
                 col = -1;
                 rowinc = -rowinc;
-                colinc = -colinc;
+                colinc = -colinc; // reverse both directions for other players' side
             }
 
             if (message == LOST) { // the other player lost
@@ -294,4 +331,13 @@ int main (void)
             }
         }
     }
+}
+
+
+int main (void)
+{
+    initialiseAll ();
+    playGame ();
+
+    return 0;
 }
