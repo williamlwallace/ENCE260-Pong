@@ -6,7 +6,7 @@
 
 #include "bar.h"
 
-void bar_lightUp (int col, int rows[]) // turns on three LEDs for the bar
+void bar_lightUp (int col, int* rows) // turns on three LEDs for the bar
 {
     display_pixel_set (col, rows[0], 1);
     display_pixel_set (col, rows[1], 1);
@@ -14,7 +14,7 @@ void bar_lightUp (int col, int rows[]) // turns on three LEDs for the bar
 }
 
 
-void bar_moveLeft (int col, int rows[])
+void bar_moveLeft (int col, int* rows)
 {
     int i = 0;
     display_pixel_set (col, rows[0], 0); // turns off rightmost LED of the bar
@@ -31,7 +31,7 @@ void bar_moveLeft (int col, int rows[])
 }
 
 
-void bar_moveRight (int col, int rows[])
+void bar_moveRight (int col, int* rows)
 {
     int i = 0;
     display_pixel_set (col, rows[2], 0); // turns off leftmost LED of the bar
@@ -48,16 +48,16 @@ void bar_moveRight (int col, int rows[])
 }
 
 
-void bar_task (int rows[])
+void bar_task (int* rows)
 {
     if (navswitch_push_event_p (NAVSWITCH_NORTH)) {
-        bar_moveRight (COL, rows);
-        bar_lightUp (COL, rows);
+        bar_moveRight (BAR_COL, rows);
+        bar_lightUp (BAR_COL, rows);
     }
 
     if (navswitch_push_event_p (NAVSWITCH_SOUTH)) {
-        bar_moveLeft (COL, rows);
-        bar_lightUp (COL, rows);
+        bar_moveLeft (BAR_COL, rows);
+        bar_lightUp (BAR_COL, rows);
     }
 }
 
