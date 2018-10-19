@@ -10,12 +10,14 @@
 /** Runs through the whole game */
 void playGame (int* playing, int* rows)
 {
+    // initial ball variables
     int ball_tick = 0;
-    char message = 0;
     int row = INITIAL_BALL_ROW;
     int col = INITIAL_BALL_COL;
     int rowinc = 1;
-    int colinc = -1; // initially moves upwards and to the left
+    int colinc = -1; // rowinc and colinc control the ball's direction
+
+    char message = 0;
 
     startScreen (playing);
     tinygl_clear (); // clear the starting screen
@@ -56,7 +58,7 @@ void playGame (int* playing, int* rows)
             }
         }
 
-        bar_task (rows);
+        bar_task (rows); // both players can always move the bar whether they are active or not
 
         display_update ();
         navswitch_update ();

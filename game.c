@@ -21,7 +21,7 @@ int main (void)
 
     int playing = 0; // initial state of players: 0 = not your turn, 1 = your turn
 
-    playGame (&playing, rows);
+    playGame (&playing, rows); // located in pong.c module
 
     return 0;
 }
