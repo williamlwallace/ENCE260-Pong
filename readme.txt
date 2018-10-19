@@ -13,7 +13,6 @@
  3. Player 2 run same command after first UCFK4 has initialised the game
  4. Face the UCFK4 towards each other so that the IR scanners are facing each other
  4. To start playing player 1 press navswitch down and player 2 press navswitch east 
- 5. To restart game, repeat step 4
 
 // HOW TO PLAY //
 
