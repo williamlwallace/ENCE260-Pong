@@ -28,12 +28,12 @@ void startScreen (int* playing)
 
         if (navswitch_push_event_p (NAVSWITCH_PUSH)) { // player that pushes down gets the ball first
 
-            *playing = 1; // variable indicating that this player is now active
+            *playing = 1; // this player is now active
             break;
 
         } else if (navswitch_push_event_p (NAVSWITCH_EAST)) { // other player
 
-            *playing = 0;
+            *playing = 0; // this player waits for the ball
             break;
         }
 
@@ -41,7 +41,7 @@ void startScreen (int* playing)
         navswitch_update ();
     }
 
-    led_set  (LED1, 0); // turn LED off
+    led_set  (LED1, 0);
 }
 
 
@@ -54,7 +54,7 @@ void loserScreen (int* playing, int* rows)
     while (1) {
         pacer_wait ();
 
-        if (navswitch_push_event_p (NAVSWITCH_PUSH)) {
+        if (navswitch_push_event_p (NAVSWITCH_PUSH)) { // use same method to restart the game again
 
             *playing = 1;
             restartGame (playing, rows);
@@ -93,7 +93,7 @@ void winnerScreen (int* playing, int* rows)
             state = led_task (state);
         }
 
-        if (navswitch_push_event_p (NAVSWITCH_PUSH)) {
+        if (navswitch_push_event_p (NAVSWITCH_PUSH)) { // use same method to restart the game again
 
             *playing = 1;
             restartGame (playing, rows);
@@ -143,7 +143,7 @@ void countdown (void)
 
     int count_tick = 0;
 
-    while (count_tick < (HALF_SECOND * 3)) { // after '1' has shown for a half second
+    while (count_tick < (HALF_SECOND * 3)) { // a half second is 250 loops as the pacer rate is 500 Hz
         pacer_wait();
 
         count_tick++;

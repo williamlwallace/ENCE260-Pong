@@ -15,7 +15,7 @@ void playGame (int* playing, int* rows)
     int row = INITIAL_BALL_ROW;
     int col = INITIAL_BALL_COL;
     int rowinc = 1;
-    int colinc = -1; // initially moves upwards
+    int colinc = -1; // initially moves upwards and to the left
 
     startScreen (playing);
     tinygl_clear (); // clear the starting screen
@@ -44,8 +44,8 @@ void playGame (int* playing, int* rows)
             message = getMessage ();
 
             if (message == BALL) {
-                *playing = 1; // now other player joins
-                col = -1;
+                *playing = 1; // now this player is active and other player is waiting
+                col = -1; // reset col
                 rowinc = -rowinc;
                 colinc = -colinc; // reverse both directions for other players' side
             }

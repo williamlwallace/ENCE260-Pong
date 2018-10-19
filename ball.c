@@ -10,9 +10,9 @@
 /** Resets ticks, LED and previous position of ball to get it ready for its next position */
 void ball_refresh (int* ball_tick, int col, int row)
 {
-    *ball_tick = 0; // reset ticks
-    led_set  (LED1, 0); // reset LED
-    display_pixel_set (col, row, 0); // erase previous position
+    *ball_tick = 0;
+    led_set  (LED1, 0);
+    display_pixel_set (col, row, 0);
 }
 
 
@@ -32,7 +32,7 @@ void ball_collision (int* playing, int* rows, int* row, int* col, int* colinc)
         led_set (LED1, 1); // turn on LED upon bouncing
         ball_bounce (col, colinc);
 
-    } else { // you missed
+    } else {
 
         sendMessage (LOST); // send message to other player that they've won
         display_clear ();
@@ -47,7 +47,7 @@ int ball_switch (int* playing, int row)
     char inverseRow[7] = {6, 5, 4, 3, 2, 1, 0}; // where the row is on the other side
 
     *playing = 0; // change current player to be not playing
-    sendMessage (BALL); // let the other player know it has to receive a ball
+    sendMessage (BALL); // let the other player know they have to receive a ball
     row = inverseRow[row];
 
     return row;
