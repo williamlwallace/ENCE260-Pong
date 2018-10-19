@@ -6,12 +6,16 @@
 
 #include "communication.h"
 
-/** Tries to receive a message from the other player */
+
+/** Tries to receive and return a message from the other player */
 char getMessage (void)
 {
     if (ir_uart_read_ready_p ()) {
+
         return ir_uart_getc ();
+
     } else {
+
         return 0;
     }
 }
@@ -21,7 +25,7 @@ char getMessage (void)
 void sendMessage (char message)
 {
     if (ir_uart_write_ready_p ()) {
+
         ir_uart_putc (message);
     }
-
 }

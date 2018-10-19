@@ -1,6 +1,6 @@
 # File:   Makefile
-# Author: M. P. Hayes, UCECE
-# Date:   12 Sep 2010
+# Authors: Alina Phang, William Wallace
+# Date:   18 October 2018
 # Descr:  Makefile for game
 
 # Definitions.
@@ -40,13 +40,16 @@ led.o: ../../drivers/led.c ../../drivers/avr/pio.h ../../drivers/avr/system.h ..
 pio.o: ../../drivers/avr/pio.c ../../drivers/avr/pio.h ../../drivers/avr/system.h
 	$(CC) -c $(CFLAGS) $< -o $@
 
+initialisers.o: initialisers.c initialisers.h
+	$(CC) -c $(CFLAGS) $< -o $@
+
+pong.o: pong.c pong.h
+	$(CC) -c $(CFLAGS) $< -o $@
+
 bar.o: bar.c bar.h
 	$(CC) -c $(CFLAGS) $< -o $@
 
 ball.o: ball.c ball.h
-	$(CC) -c $(CFLAGS) $< -o $@
-
-initialisers.o: initialisers.c initialisers.h
 	$(CC) -c $(CFLAGS) $< -o $@
 
 communication.o: communication.c communication.h
@@ -78,7 +81,7 @@ tinygl.o: ../../utils/tinygl.c ../../drivers/avr/system.h ../../drivers/display.
 
 
 # Link: create ELF output file from object files.
-game.out: game.o system.o ir_uart.o prescale.o timer0.o usart1.o led.o pio.o bar.o ball.o initialisers.o communication.o aesthetics.o timer.o display.o ledmat.o navswitch.o font.o pacer.o tinygl.o
+game.out: game.o system.o ir_uart.o prescale.o timer0.o usart1.o led.o pio.o initialisers.o pong.o bar.o ball.o communication.o aesthetics.o timer.o display.o ledmat.o navswitch.o font.o pacer.o tinygl.o
 	$(CC) $(CFLAGS) $^ -o $@ -lm
 	$(SIZE) $@
 
@@ -94,5 +97,3 @@ clean:
 program: game.out
 	$(OBJCOPY) -O ihex game.out game.hex
 	dfu-programmer atmega32u2 erase; dfu-programmer atmega32u2 flash game.hex; dfu-programmer atmega32u2 start
-
-

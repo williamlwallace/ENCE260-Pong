@@ -1,10 +1,11 @@
 /** @file   initialisers.c
     @authors Alina Phang, William Wallace
     @date   18 October 2018
-    @brief  Module containing initialising
+    @brief  Module containing all initialisation
 */
 
 #include "initialisers.h"
+
 
 /** Initialises all of the drivers we will use */
 void initialiseAll (void)

@@ -9,12 +9,13 @@
 
 #include "initialisers.h"
 
-/** Tries to receive a message from the other player */
+
+/** Tries to receive and return a message from the other player */
 char getMessage (void);
 
 
 /** Sends a message to the other player */
 void sendMessage (char message);
 
-#endif
 
+#endif
